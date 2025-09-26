@@ -6,6 +6,11 @@ enum DetectionResult {
     case none, success, failure
 }
 
+// 检测结果枚举
+enum InjectResult {
+    case success, failure
+}
+
 // 模块数据结构
 struct SecurityModule: Identifiable, Hashable {
     let id = UUID()

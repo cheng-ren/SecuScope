@@ -20,7 +20,9 @@ struct EncryptionView: View {
         EncryptionAlgorithm(name: "Base64", color: .blue),
         EncryptionAlgorithm(name: "MD5", color: .green),
         EncryptionAlgorithm(name: "AES", color: .purple),
-        EncryptionAlgorithm(name: "SHA256", color: .orange)
+        EncryptionAlgorithm(name: "SHA256", color: .orange),
+        EncryptionAlgorithm(name: "DES", color: .cyan),
+        EncryptionAlgorithm(name: "RSA", color: .red),
     ]
     @State private var isProcessing = false
     @FocusState private var isTextEditorFocused: Bool

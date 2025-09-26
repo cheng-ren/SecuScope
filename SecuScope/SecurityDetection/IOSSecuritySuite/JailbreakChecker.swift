@@ -210,7 +210,7 @@ internal class JailbreakChecker {
     
     for path in paths {
       if FileManager.default.fileExists(atPath: path) {
-        return (false, "Suspicious file exists: \(path)")
+        return (false, "\(path)")
       } else if let result = FileChecker.checkExistenceOfSuspiciousFilesViaStat(path: path) {
         return result
       } else if let result = FileChecker.checkExistenceOfSuspiciousFilesViaFOpen(
@@ -376,7 +376,10 @@ internal class JailbreakChecker {
     
     for index in 0..<_dyld_image_count() {
       let imageName = String(cString: _dyld_get_image_name(index))
-      
+      // check path contain: `.jbroot-`
+        if imageName.contains(".jbroot-") {
+            return (false, "\(imageName)")
+        }
       // The fastest case insensitive contains check.
       for library in suspiciousLibraries where imageName.localizedCaseInsensitiveContains(library) {
         return (false, "Suspicious library loaded: \(imageName)")

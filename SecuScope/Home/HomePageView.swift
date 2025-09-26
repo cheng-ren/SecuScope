@@ -3,9 +3,14 @@ import SwiftUI
 struct HomePageView: View {
     @State private var isDetecting = false
     @State private var detectionResult: DetectionResult = .none
+    @State private var injectStatus: InjectResult = .failure
     @State private var showDetails = false
     // 添加越狱检测详细结果的状态
     @State private var jailbreakDetectionResult: JailbreakDetectionResult?
+    // 新增状态变量用于反调试开关
+    @State private var isAntiDebuggingEnabled = false
+    // 新增状态变量用于显示 MoreView
+    @State private var showMoreView = false
     
     var body: some View {
         NavigationStack {
@@ -24,13 +29,41 @@ struct HomePageView: View {
                                             endPoint: .bottomTrailing
                                         )
                                     )
-                                    .frame(width: geometry.size.width * 0.7, height: geometry.size.width * 0.7)
+                                    .frame(width: geometry.size.width * 0.66, height: geometry.size.width * 0.66)
                                     .shadow(color: Color.black.opacity(0.3), radius: 10, x: 0, y: 5)
                             }
                             .buttonStyle(PlainButtonStyle())
                             
+                            VStack {
+                                HStack(alignment: .top) {
+                                    VStack(alignment: .leading) {
+                                        Text("注入状态")
+                                            .font(.subheadline)
+                                            .fontWeight(.bold)
+                                        Circle()
+                                            .fill(injectStatus == .success ? Color.green : Color.red)
+                                            .frame(width: 10, height: 10)
+                                            .padding(.top, 2)
+                                    }
+                                    Spacer()
+                                    VStack(alignment: .trailing) {
+                                        Text("反调试")
+                                            .font(.subheadline)
+                                            .fontWeight(.bold)
+                                        Toggle("", isOn: $isAntiDebuggingEnabled)
+                                            .labelsHidden()
+                                            .toggleStyle(SwitchToggleStyle(tint: .blue))
+                                            .scaleEffect(0.8)
+                                            .padding(.top, 0)
+                                            .onChange(of: isAntiDebuggingEnabled) { newValue in
+                                                SecurityDetector.shared.denyDebugger()
+                                            }
+                                    }
+                                }
+                                Spacer()
+                            }
+                            
                             if isDetecting {
-                                
                                 VStack(spacing: 10) {
                                     ProgressView()
                                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
@@ -48,7 +81,8 @@ struct HomePageView: View {
                                     } else {
                                         startDetection()
                                     }
-                                }) {
+                                })
+                                {
                                     VStack(spacing: 10) {
                                         if detectionResult == .success {
                                             Image(systemName: "checkmark.shield.fill")
@@ -62,19 +96,20 @@ struct HomePageView: View {
                                             Image(systemName: "exclamationmark.triangle.fill")
                                                 .font(.system(size: 48))
                                                 .foregroundColor(.red)
-                                            Text("设备已越狱")
+                                            Text("设备存在风险")
                                                 .font(.title2)
                                                 .fontWeight(.bold)
                                                 .foregroundColor(.red)
                                         } else {
                                             Image(systemName: "shield.checkerboard")
                                                 .font(.system(size: 48))
-                                            Text("越狱检测")
+                                            Text("安全检测")
                                                 .font(.title2)
                                                 .fontWeight(.bold)
                                                 .foregroundColor(.white)
                                         }
                                     }
+                                    .contentShape(Rectangle())
                                     .foregroundColor(.white)
                                     .frame(width: geometry.size.width * 0.7, height: geometry.size.width * 0.7)
                                 }
@@ -85,13 +120,17 @@ struct HomePageView: View {
                         .padding(.top)
                         .disabled(isDetecting)
                         
-                        Spacer().frame(height: 30)
+                        Spacer().frame(height: 10)
                         
                         // 美化后的网格视图
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 2), spacing: 16) {
                             ForEach(modules) { module in
                                 if module.name == "加密算法" {
                                     NavigationLink(destination: EncryptionView()) {
+                                        ModuleItemView(module: module)
+                                    }
+                                } else if module.name == "网络请求" {
+                                    NavigationLink(destination: NetworkPageView()) {
                                         ModuleItemView(module: module)
                                     }
                                 } else {
@@ -109,10 +148,26 @@ struct HomePageView: View {
             }
             .navigationTitle("逆向安全")
             .navigationBarTitleDisplayMode(.large)
+            // 添加右上角的 information 图标按钮
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        showMoreView = true
+                    }) {
+                        Image(systemName: "info.circle")
+                            .imageScale(.large)
+                            .foregroundColor(.blue)
+                    }
+                }
+            }
             // 传递越狱检测结果到详情视图
             .navigationDestination(isPresented: $showDetails) {
                 DetectionDetailsView(jailbreakDetectionResult: jailbreakDetectionResult)
                     .navigationBarTitleDisplayMode(.inline)
+            }
+            // 展示 MoreView
+            .sheet(isPresented: $showMoreView) {
+                MoreView()
             }
         }
     }
@@ -160,17 +215,10 @@ struct ModuleItemView: View {
                 .fill(Material.regular)
                 .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
         )
-        .buttonStyle(ModuleItemButtonStyle())
+        .animation(.easeInOut(duration: 0.2), value: isPressed)
     }
-}
-
-// 自定义按钮样式以支持按下动画
-struct ModuleItemButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
-            .animation(.easeInOut(duration: 0.2), value: configuration.isPressed)
-    }
+    
+    @State private var isPressed = false
 }
 
 #Preview {

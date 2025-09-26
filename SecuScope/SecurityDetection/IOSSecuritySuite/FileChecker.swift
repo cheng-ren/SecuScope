@@ -159,7 +159,7 @@ internal class FileChecker {
     
     if let filePointer: UnsafeMutablePointer<FILE> = fopen(path, mode) {
       fclose(filePointer)
-      return (false, "Suspicious file exists: \(path)")
+      return (false, "\(path)")
     } else {
       return nil
     }
@@ -174,7 +174,7 @@ internal class FileChecker {
     let resultCode = stat((path as NSString).fileSystemRepresentation, &statbuf)
     
     if resultCode == 0 {
-      return (false, "Suspicious file exists: \(path)")
+      return (false, "\(path)")
     } else {
       return nil
     }
@@ -197,7 +197,7 @@ internal class FileChecker {
     )
     
     if resultCode == 0 {
-      return (false, "Suspicious file exists: \(path)")
+      return (false, "\(path)")
     } else {
       return nil
     }

@@ -18,7 +18,7 @@ struct JailbreakDetectionResult {
         case existenceOfSuspiciousFiles = "可疑文件是否存在"
         case suspiciousFilesCanBeOpened = "可疑文件是否能打开"
         case suspiciousObjCClasses = "可疑OC类"
-        case dyld = "可疑动态库"
+        case dyld = "可疑动态库被加载"
         case restrictedDirectoriesWriteable = "受限目录是否可写"
         case environmentVariables = "可疑环境变量"
         case symbolicLinks = "系统文件转符号链接"
@@ -46,6 +46,19 @@ class SecurityDetector {
     func isDeviceJailbroken() -> Bool {
         let result = detailedJailbreakDetection()
         return result.isJailbroken
+    }
+    
+    func denyDebugger() {
+        DebuggerChecker.denyDebugger()
+        DebugDetection().ori_ptrace()
+        DebugDetection().ori_syscall()
+        DebugDetection().ori_sysctl()
+        DebugDetection().svc_ptrace()
+        DebugDetection().svc_syscall()
+        DebugDetection().svc_sysctl()
+        DebugDetection().xor_ptrace()
+        DebugDetection().xor_syscall()
+        DebugDetection().xor_sysctl() // root-hide 没有crash
     }
     
     // 详细的越狱检测方法，返回详细的检测结果
